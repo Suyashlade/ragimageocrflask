@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Query System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header
+            <h1>Document Query System</h1>
+        </header>
+        <form action="/" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/png" required>
+            <button type="submit">Upload PNG</button>
+        </form>
+        {% if message %}
+        <p>{{ message }}</p>
+        {% endif %}
+        {% if show_chat %}
+        <div class="chat-box" id="chat-box">
+            {% for user_msg, bot_msg in chat_history %}
+            <div class="chat-entry user">{{ user_msg }}</div>
+            <div class="chat-entry bot">{{ bot_msg }}</div>
+            {% endfor %}
+        </div>
+        <form id="query-form">
+            <textarea name="query" id="query-input" placeholder="Ask your question here..." required></textarea>
+            <button type="submit">Submit Query</button>
+        </form>
+        {% endif %}
+    </div>
+    <script>
+        document.getElementById('query-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var queryInput = document.getElementById('query-input');
+            var query = queryInput.value;
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/query', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    var chatBox = document.getElementById('chat-box');
+                    
+                    var userEntry = document.createElement('div');
+                    userEntry.className = 'chat-entry user';
+                    userEntry.textContent = response.query;
+                    chatBox.appendChild(userEntry);
+
+                    var botEntry = document.createElement('div');
+                    botEntry.className = 'chat-entry bot';
+                    botEntry.textContent = response.response;
+                    chatBox.appendChild(botEntry);
+
+                    queryInput.value = '';
+                }
+            };
+            xhr.send('query=' + encodeURIComponent(query));
+        });
+    </script>
+</body>
+</html>
